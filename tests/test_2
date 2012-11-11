@@ -1,0 +1,13 @@
+#!/bin/bash
+# Test if huffman/unhuffman works on a small file of ASCII symbols
+PATH="../:$PATH"
+INFILE="resources/ascii_text1.txt"
+OUTFILE="ascii_text1.unhuff"
+
+huffman ${INFILE} | unhuffman > ${OUTFILE}
+diff -a ${INFILE} ${OUTFILE} &>/dev/null
+rc=$?;
+
+rm $OUTFILE;
+
+exit $rc;
