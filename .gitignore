@@ -1,3 +1,5 @@
 huffman
 unhuffman
 dbg/*
+*.swp
+*.swo

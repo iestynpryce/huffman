@@ -4,6 +4,7 @@
  */
 
 #include "huffman.h"
+#include "file_stat.h"
 
 /* Tree node structure */
 typedef struct symbol
@@ -32,6 +33,14 @@ typedef struct code
 	unsigned char  symbol;
 	struct code   *next;
 } Code;
+
+struct opts
+{
+	bool statistics;
+	bool unhuffman;
+	FILE *infile;
+	FILE *outfile;
+};
 
 void print_ll(Symbol *s)
 {
@@ -524,6 +533,61 @@ void usage(char *argv[]) {
 	printf("\nIf no outfile is specifed STDOUT will be used\n");
 }
 
+/* Parse the command line arguments */
+struct opts optparse(int argc, char *argv[])
+{
+	char c;
+	struct opts options;
+
+	options.unhuffman  = false;
+	options.statistics = false;
+
+	while (--argc > 0 && (*++argv)[0] == '-')
+	{
+		while ((c = *++argv[0]) != 0)
+		{
+			switch (c)
+			{
+			case 'u':
+				options.unhuffman = true;
+				break;
+			case 's':
+				options.statistics = true;
+				break;
+			default:
+				fprintf(stderr,"Illegal option: %c\n", c);
+				usage(argv);
+				break;
+			}
+		}
+	}
+	if (argc > 0)
+	{
+		options.infile = fopen(argv[0],"rb");
+		if (options.infile == NULL)
+		{
+			fprintf(stderr,"Failed to open file: %s\n",argv[0]);
+			exit(2);
+		}
+		argc--;
+		if (argc > 0)
+		{
+			options.outfile = fopen(argv[1],"wb");
+			if (options.outfile == NULL)
+			{
+				fprintf(stderr,"Failed to open file: %s\n",
+						argv[1]);
+				exit(2);
+			}
+		}
+		else
+		{
+			options.outfile = stdout;
+		}
+	}
+	return options;
+}
+
 /* Performs huffman encoding on an input file stream, and outputs the  *
  * compressed file to the output file stream                           */
 int huffman(FILE *in, FILE *out)
@@ -585,6 +649,7 @@ int main(int argc, char *argv[]) {
 	FILE   *fp;
 	FILE   *fpo;
 
+#ifdef foo
 	/* Start processing input arguments */
 	if (argc < 2)
 	{
@@ -613,6 +678,17 @@ int main(int argc, char *argv[]) {
 	else
 	{
 		fpo = stdout;
+	}
+#endif
+	struct opts options = optparse(argc,argv);
+	fp  = options.infile;
+	fpo = options.outfile;
+
+	if (options.unhuffman == true) {
+		fprintf(stderr,"unhuffman set\n");
+	}
+	if (options.statistics == true) {
+		fprintf(stderr,"statistics set\n");
 	}
 	/* End processing input arguments */
 
