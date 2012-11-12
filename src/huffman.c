@@ -540,17 +540,8 @@ void usage(char *argv[]) {
 struct opts optparse(int argc, char *argv[])
 {
 	char c;
-	struct opts options;
-
-	options.unhuffman  = false;
-	options.statistics = false;
-
-	/*if (argc < 2)
-	{
-		fprintf(stderr,"Expected at least 1 argument\n");
-		usage(argv);
-		exit(2);
-	}*/
+	struct opts options = { .unhuffman  = false, .statistics = false,
+		   		.infile = NULL, .outfile = NULL };
 
 	while (--argc > 0 && (*++argv)[0] == '-')
 	{
