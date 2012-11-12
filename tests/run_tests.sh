@@ -32,3 +32,5 @@ if [ "$failed_test_count" -ne "0" ]; then
 		echo "      $f";
 	done
 fi
+
+exit $failed_test_count
