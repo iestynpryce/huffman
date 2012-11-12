@@ -5,62 +5,64 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
 Bits	huffman.c	/^} Bits;$/;"	t	typeref:struct:bits	file:
-Buffer	bd.c	/^} Buffer;$/;"	t	typeref:struct:__anon1	file:
 Code	huffman.c	/^} Code;$/;"	t	typeref:struct:code	file:
 Node	unhuffman.c	/^} Node;$/;"	t	typeref:struct:node	file:
 Symbol	huffman.c	/^} Symbol;$/;"	t	typeref:struct:symbol	file:
-Symbol	sort_test.c	/^typedef struct symbol Symbol;$/;"	t	typeref:struct:symbol	file:
 bit	huffman.c	/^	bool         bit;$/;"	m	struct:bits	file:
 bits	huffman.c	/^typedef struct bits$/;"	s	file:
-buf	bd.c	/^	uint8_t buf;$/;"	m	struct:__anon1	file:
-build_statistics	huffman.c	/^Symbol *build_statistics( FILE *fp)$/;"	f
+build_statistics	huffman.c	/^Symbol *build_statistics( f_stat *fp)$/;"	f
 build_tree	huffman.c	/^Symbol** build_tree(Symbol *s)$/;"	f
-check_header	unhuffman.c	/^int check_header(FILE *fp) {$/;"	f
+check_header	unhuffman.c	/^int check_header(FILE *fp)$/;"	f
 code	huffman.c	/^	bool           code;$/;"	m	struct:symbol	file:
 code	huffman.c	/^	struct bits   *code;$/;"	m	struct:code	typeref:struct:code::bits	file:
 code	huffman.c	/^typedef struct code$/;"	s	file:
-compress_file	huffman.c	/^int compress_file(Code *codes, FILE *in_fp, FILE *out_fp) $/;"	f
-encode_node	huffman.c	/^void encode_node(Symbol *s, FILE *fp, Buffer *b) {$/;"	f
-free_node	unhuffman.c	/^void free_node(Node *n) {$/;"	f
+compress_file	huffman.c	/^int compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp) $/;"	f
+encode_node	huffman.c	/^void encode_node(Symbol *s, f_stat *fp, Buffer *b) {$/;"	f
+fclose_stat	file_stat.c	/^int fclose_stat(f_stat *stream)$/;"	f
+fflush_stat	file_stat.c	/^int fflush_stat(f_stat *stream)$/;"	f
+fgetc_stat	file_stat.c	/^int fgetc_stat(f_stat *stream)$/;"	f
+fputc_stat	file_stat.c	/^int fputc_stat (int character, f_stat *stream)$/;"	f
+free_node	unhuffman.c	/^void free_node(Node *n)$/;"	f
 free_tree	huffman.c	/^void free_tree(Symbol *t) {$/;"	f
-get_bit	bd.c	/^bool get_bit(Buffer *b) {$/;"	f
-get_bit	unhuffman.c	/^bool get_bit(Buffer *b) {$/;"	f
+fwrite_stat	file_stat.c	/^size_t fwrite_stat(const void *ptr, size_t size, size_t count, f_stat *stream)$/;"	f
+get_bit	unhuffman.c	/^bool get_bit(Buffer *b)$/;"	f
 get_char_code	huffman.c	/^Code *get_char_code(unsigned char c, Code *codes)$/;"	f
 get_codes	huffman.c	/^Code *get_codes(Symbol **leaves)$/;"	f
-get_node	unhuffman.c	/^Node *get_node(Buffer *b, FILE *fp) {$/;"	f
+get_node	unhuffman.c	/^Node *get_node(Buffer *b, FILE *fp)$/;"	f
 get_root	huffman.c	/^Symbol *get_root(Symbol *t) {$/;"	f
-get_tree	unhuffman.c	/^Node *get_tree(FILE *fp) {$/;"	f
-get_val	unhuffman.c	/^uint8_t get_val(Buffer *b, FILE *fp) {$/;"	f
-huffman	huffman.c	/^int huffman(FILE *in, FILE *out)$/;"	f
+get_tree	unhuffman.c	/^Node *get_tree(FILE *fp)$/;"	f
+get_val	unhuffman.c	/^uint8_t get_val(Buffer *b, FILE *fp)$/;"	f
+huffman	huffman.c	/^int huffman(f_stat *in, f_stat *out)$/;"	f
+infile	huffman.c	/^	FILE *infile;$/;"	m	struct:opts	file:
 left	huffman.c	/^	struct symbol *left;$/;"	m	struct:symbol	typeref:struct:symbol::symbol	file:
 left	unhuffman.c	/^	struct node *left;$/;"	m	struct:node	typeref:struct:node::node	file:
-len	bd.c	/^	int	len;$/;"	m	struct:__anon1	file:
 length	huffman.c	/^	unsigned int   length;$/;"	m	struct:code	file:
-main	bd.c	/^int main(void) {$/;"	f
 main	huffman.c	/^int main(int argc, char *argv[]) {$/;"	f
-main	sort_test.c	/^int main() {$/;"	f
-main	unhuffman.c	/^int main(int argc, char **argv) {$/;"	f
+main	unhuffman.c	/^int main(int argc, char **argv)$/;"	f
 next	huffman.c	/^	struct code   *next;$/;"	m	struct:code	typeref:struct:code::code	file:
 next	huffman.c	/^	struct symbol *next;$/;"	m	struct:symbol	typeref:struct:symbol::symbol	file:
 next	huffman.c	/^        struct bits *next;$/;"	m	struct:bits	typeref:struct:bits::bits	file:
-next	sort_test.c	/^	Symbol *next;$/;"	m	struct:symbol	file:
-node	unhuffman.c	/^typedef struct node {$/;"	s	file:
-output_byte	unhuffman.c	/^Node  *output_byte(Buffer *b,Node *n,Node *top,int stop,FILE *output) {$/;"	f
-output_message	unhuffman.c	/^void output_message(Node *n, FILE *input, FILE *output) {$/;"	f
+node	unhuffman.c	/^typedef struct node $/;"	s	file:
+optparse	huffman.c	/^struct opts optparse(int argc, char *argv[])$/;"	f
+opts	huffman.c	/^struct opts$/;"	s	file:
+outfile	huffman.c	/^	FILE *outfile;$/;"	m	struct:opts	file:
+output_byte	unhuffman.c	/^Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output)$/;"	f
+output_message	unhuffman.c	/^void output_message(Node *n, FILE *input, FILE *output)$/;"	f
 parent	huffman.c	/^	struct symbol *parent;$/;"	m	struct:symbol	typeref:struct:symbol::symbol	file:
 print_codes_from_tree	huffman.c	/^void print_codes_from_tree(Symbol **leaves)$/;"	f
 print_ll	huffman.c	/^void print_ll(Symbol *s)$/;"	f
+rewind_stat	file_stat.c	/^void rewind_stat(f_stat *stream)$/;"	f
 right	huffman.c	/^	struct symbol *right;$/;"	m	struct:symbol	typeref:struct:symbol::symbol	file:
 right	unhuffman.c	/^	struct node *right;$/;"	m	struct:node	typeref:struct:node::node	file:
 sort_ll	huffman.c	/^Symbol *sort_ll(Symbol* s)$/;"	f
-sort_ll	sort_test.c	/^Symbol *sort_ll(Symbol *s) {$/;"	f
+statistics	huffman.c	/^	bool statistics;$/;"	m	struct:opts	file:
 symbol	huffman.c	/^	unsigned char  symbol;$/;"	m	struct:code	file:
 symbol	huffman.c	/^	unsigned char  symbol;$/;"	m	struct:symbol	file:
 symbol	huffman.c	/^typedef struct symbol$/;"	s	file:
-symbol	sort_test.c	/^struct symbol {$/;"	s	file:
+unhuffman	huffman.c	/^	bool unhuffman;$/;"	m	struct:opts	file:
+unhuffman	unhuffman.c	/^int unhuffman(FILE *in, FILE *out)$/;"	f
 usage	huffman.c	/^void usage(char *argv[]) {$/;"	f
 value	unhuffman.c	/^	char value;$/;"	m	struct:node	file:
 weight	huffman.c	/^	uint8_t        weight;$/;"	m	struct:symbol	file:
-weight	sort_test.c	/^	int weight;$/;"	m	struct:symbol	file:
-write_header	huffman.c	/^void write_header(FILE *fp) {$/;"	f
-write_tree	huffman.c	/^void write_tree(Symbol *s, FILE *fp) {$/;"	f
+write_header	huffman.c	/^void write_header(f_stat *fp) {$/;"	f
+write_tree	huffman.c	/^void write_tree(Symbol *s, f_stat *fp) {$/;"	f
