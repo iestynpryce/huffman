@@ -138,7 +138,7 @@ Symbol *sort_ll(Symbol* s)
 }
 
 /* Create a linked list of statistics for bytes in the input */
-Symbol *build_statistics( FILE *fp)
+Symbol *build_statistics( f_stat *fp)
 {
 	assert(fp != NULL);
 
@@ -152,13 +152,13 @@ Symbol *build_statistics( FILE *fp)
 		exit(EXIT_FAILURE);
 	}
 
-	start->symbol = fgetc(fp);
+	start->symbol = fgetc_stat(fp);
 	start->weight++;
 
 	/* Copy the starting position */
 	s = start;
 
-	while((c=fgetc(fp))!=EOF)
+	while((c=fgetc_stat(fp))!=EOF)
 	{
 		while (s->symbol != c && s->next != NULL)
 		{
@@ -360,7 +360,7 @@ Code *get_char_code(unsigned char c, Code *codes)
 /* Read the file in again, using the codebook generated to output the compressed
  * symbols
  */
-int compress_file(Code *codes, FILE *in_fp, FILE *out_fp) 
+int compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp) 
 {
 	assert(codes != NULL);
 	assert(in_fp != NULL);
@@ -369,7 +369,7 @@ int compress_file(Code *codes, FILE *in_fp, FILE *out_fp)
 	Code *codes_start = codes;
 	Code *code;
 
-	rewind(in_fp);
+	rewind_stat(in_fp);
 
 	int c;
 	uint8_t buf = 0;
@@ -377,7 +377,7 @@ int compress_file(Code *codes, FILE *in_fp, FILE *out_fp)
 	int bit_count = 0;
 
 	/* Read every byte in the file */
-	while ((c=fgetc(in_fp)) != EOF)
+	while ((c=fgetc_stat(in_fp)) != EOF)
 	{
 		code = get_char_code(c,codes_start);
 		assert(code != NULL);
@@ -391,7 +391,7 @@ int compress_file(Code *codes, FILE *in_fp, FILE *out_fp)
 			bit_count++;
 			if ( bit_count >= CHAR_BIT ) 
 			{
-				fputc(buf,out_fp);
+				fputc_stat(buf,out_fp);
 				buf = 0;
 				bit_count = 0;
 			}
@@ -400,8 +400,8 @@ int compress_file(Code *codes, FILE *in_fp, FILE *out_fp)
 
 		if (bit_count == CHAR_BIT)
 		{
-			fputc(buf,out_fp);
-			fflush(out_fp);
+			fputc_stat(buf,out_fp);
+			fflush_stat(out_fp);
 			buf = 0;
 			bit_count = 0;
 		}			
@@ -409,15 +409,15 @@ int compress_file(Code *codes, FILE *in_fp, FILE *out_fp)
 
 	if (bit_count > 0)
 	{
-		fputc(buf,out_fp);
+		fputc_stat(buf,out_fp);
 		/* The footer is the last byte of data, it has a bit set *
                  * to indicate the last bit of data in the previous byte */
 		footer = 0x01 << (CHAR_BIT - bit_count);
 	}
 
 	/* Write out the footer */
-	fputc(footer,out_fp);
-	fflush(out_fp);
+	fputc_stat(footer,out_fp);
+	fflush_stat(out_fp);
 
 	/* Make sure that codes is pointing at the first in the linked list */
 	codes = codes_start;
@@ -425,7 +425,7 @@ int compress_file(Code *codes, FILE *in_fp, FILE *out_fp)
 	return EXIT_SUCCESS;
 }
 
-void encode_node(Symbol *s, FILE *fp, Buffer *b) {
+void encode_node(Symbol *s, f_stat *fp, Buffer *b) {
 
 	size_t bufsize = CHAR_BIT*sizeof(b->buf);
 
@@ -437,7 +437,7 @@ void encode_node(Symbol *s, FILE *fp, Buffer *b) {
 		b->len++;
 		if (b->len == bufsize) 
 		{
-			fputc(b->buf,fp);
+			fputc_stat(b->buf,fp);
 			b->buf = 0;
 			b->len = 0;
 		}
@@ -445,14 +445,14 @@ void encode_node(Symbol *s, FILE *fp, Buffer *b) {
 		if (b->len == 0) 
 		{
 			b->buf = s->symbol;
-			fputc(b->buf,fp);
+			fputc_stat(b->buf,fp);
 			b->buf = 0;
 			b->len = 0;
 		} 
 		else 
 		{
 			b->buf |= ( s->symbol >> b->len);
-			fputc(b->buf,fp);
+			fputc_stat(b->buf,fp);
 			/*Note we've not reset the b->len variable! We 	*
  			 * still want the value.			*/
 			b->buf = 0; 
@@ -465,7 +465,7 @@ void encode_node(Symbol *s, FILE *fp, Buffer *b) {
 		b->buf |= (0 << (bufsize - b->len - 1));
 		b->len++;
 		if (b->len == bufsize) {
-			fputc(b->buf,fp);
+			fputc_stat(b->buf,fp);
 			b->buf = 0;
 			b->len = 0;
 		}
@@ -476,7 +476,7 @@ void encode_node(Symbol *s, FILE *fp, Buffer *b) {
 }
 
 /* Write the Huffman tree as a series of bits */
-void write_tree(Symbol *s, FILE *fp) {
+void write_tree(Symbol *s, f_stat *fp) {
 	assert(s != NULL);
 	assert(fp != NULL);
 
@@ -489,16 +489,16 @@ void write_tree(Symbol *s, FILE *fp) {
 
 	/* Ensure that we clear any trailing bits in the buffer */
 	if (b.len != 0) {
-		fputc(b.buf,fp);
+		fputc_stat(b.buf,fp);
 	}
 }
 
 /* Write out the 'magic number' in the first 4 bytes so we can identify the *
  * compressed file has having been written by this program.                 */
-void write_header(FILE *fp) {
+void write_header(f_stat *fp) {
 	assert(fp != NULL);
 	const char buf[] = "HUFF";
-	fwrite(buf,4,sizeof(char),fp);
+	fwrite_stat(buf,4,sizeof(char),fp);
 }
 
 /* Free memory in a symbol tree */
@@ -529,7 +529,10 @@ Symbol *get_root(Symbol *t) {
 
 /* Usage information */
 void usage(char *argv[]) {
-	printf("%s file [outfile]\n",argv[0]);
+	printf("%s [-s] file [outfile]\n",argv[0]);
+	printf("\n");
+	printf("Options:\n");
+	printf("-s: print compression statistics to STDOUT\n");
 	printf("\nIf no outfile is specifed STDOUT will be used\n");
 }
 
@@ -590,7 +593,7 @@ struct opts optparse(int argc, char *argv[])
 
 /* Performs huffman encoding on an input file stream, and outputs the  *
  * compressed file to the output file stream                           */
-int huffman(FILE *in, FILE *out)
+int huffman(f_stat *in, f_stat *out)
 {
 	Symbol *tree;
 	Symbol **leaves;
@@ -646,57 +649,30 @@ int huffman(FILE *in, FILE *out)
 }
 
 int main(int argc, char *argv[]) {
-	FILE   *fp;
-	FILE   *fpo;
+	f_stat in;
+	f_stat out;
 
-#ifdef foo
-	/* Start processing input arguments */
-	if (argc < 2)
-	{
-		fprintf(stderr,"Expected filename as argument\n");
-		usage(argv);
-		exit(1);
-	}
-
-	/* Open input file */
-	fp = fopen(argv[1],"rb");
-	if (fp == NULL)
-	{
-		fprintf(stderr,"Failed to open file: %s\n",argv[1]);
-		exit(2);
-	}
-
-	/* Open output file, if defined, otherwise open STDOUT */
-	if (argc > 2)
-	{
-		fpo = fopen(argv[2],"wb");
-		if (fpo == NULL)
-		{
-			fprintf(stderr,"Failed to open file: %s\n",argv[2]);
-		}
-	}
-	else
-	{
-		fpo = stdout;
-	}
-#endif
+	/* Process the input arguments */
 	struct opts options = optparse(argc,argv);
-	fp  = options.infile;
-	fpo = options.outfile;
 
-	if (options.unhuffman == true) {
-		fprintf(stderr,"unhuffman set\n");
-	}
-	if (options.statistics == true) {
-		fprintf(stderr,"statistics set\n");
-	}
-	/* End processing input arguments */
+	in.byte_count  = 0;
+	in.file        = options.infile;
+	out.byte_count = 0;
+	out.file       = options.outfile;
 
-	int rc = huffman(fp,fpo);
+	int rc = huffman(&in,&out);
 	
 	/* Finally we close the input and output file */
-	fclose(fp);
-	fclose(fpo);
+	fclose_stat(&in);
+	fclose_stat(&out);
+
+	if (options.statistics == true)
+	{
+		/* We multiply the ratio by 2 because we've read the input *
+                 * stream twice.					   */
+		double compression_ratio = (double)2*out.byte_count/in.byte_count;
+		printf("Compression ratio: %.2f\n",compression_ratio);
+	}
 
 	return rc;
 }
