@@ -6,6 +6,8 @@
 #include "huffman.h"
 #include "file_stat.h"
 
+#include <string.h>
+
 /* Tree node structure */
 typedef struct symbol
 {
@@ -34,6 +36,13 @@ typedef struct code
 	struct code   *next;
 } Code;
 
+typedef struct node 
+{
+	char value;
+	struct node *left;
+	struct node *right;
+} Node;
+
 struct opts
 {
 	bool statistics;
@@ -41,6 +50,8 @@ struct opts
 	FILE *infile;
 	FILE *outfile;
 };
+
+Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output);
 
 void print_ll(Symbol *s)
 {
@@ -357,6 +368,21 @@ Code *get_char_code(unsigned char c, Code *codes)
 	return codes;
 }
 
+/* Return the bit value of the current bit defined in the buffer */
+bool get_bit(Buffer *b)
+{
+	assert(b != NULL);
+	uint8_t i = 0x01;
+
+	/* Return the bit that the buffer is currently pointing to */
+	i <<= (CHAR_BIT*sizeof(b->buf) - b->len - 1);
+	i &=  b->buf;
+	i >>= (CHAR_BIT*sizeof(b->buf) - b->len - 1);
+
+	return (i == 1) ? true : false; 
+}
+
+
 /* Read the file in again, using the codebook generated to output the compressed
  * symbols
  */
@@ -501,6 +527,31 @@ void write_header(f_stat *fp) {
 	fwrite_stat(buf,4,sizeof(char),fp);
 }
 
+/* Check that this is file has the correct 'magic number' in the header	*
+ * so that we identify it as a file compressed by the huffman encoder   */
+int check_header(FILE *fp)
+{
+	assert(fp != NULL);
+
+	char *c = calloc(5,sizeof(char));
+	if (c == NULL)
+	{
+		fprintf(stderr,"Out of memory\n");
+		exit(EXIT_FAILURE);
+	}
+	assert(c != NULL);
+	
+	/* Define the expected header */
+	const char header[] = "HUFF";
+	fread(c,4,sizeof(char),fp);
+	c[4] = '\0';
+
+	int r =  strcmp(c,header);
+	free(c);
+
+	return r;
+}
+
 /* Free memory in a symbol tree */
 void free_tree(Symbol *t) {
 	assert(t != NULL);
@@ -515,6 +566,172 @@ void free_tree(Symbol *t) {
 	free(t);
 }
 
+/* Free Node structure memory */
+void free_node(Node *n)
+{
+	assert(n != NULL);
+
+	if (n->left != NULL)
+	{
+		free_node(n->left);
+	}
+	if (n->right != NULL)
+	{
+		free_node(n->right);
+	}
+	free(n);
+}
+
+/* Given the huffman tree, decompress the file to the output */
+void output_message(Node *n, FILE *input, FILE *output)
+{
+	assert(n != NULL);
+	assert(input != NULL);
+	assert(output != NULL);
+
+	Buffer b;
+	uint8_t last;
+	uint8_t next;
+	
+	Node *top = n;
+
+	fread(&b.buf,1,1,input);
+	fread(&next,1,1,input);
+
+	while (fread(&last,1,1,input))
+	{
+		b.len = 0;
+		n = output_byte(&b,n,top,CHAR_BIT*sizeof(b.buf),output);
+		b.buf = next;
+		next  = last;
+	}
+
+	/* print out the data in the last but one byte using the last byte  *
+         * footer data.							    */
+	b.len = 0;
+	int stop = 1;
+	while ( (next <<= 1) > 0 )
+	{ 
+		stop++;
+	}
+
+	/* The stopping bit _cannot be longer than the number of bits in a *
+ 	 * a char.							   */
+	assert(stop <= CHAR_BIT);
+
+	n = output_byte(&b,n,top,stop,output);
+
+	/* make sure n is back at the top of the tree */
+	n = top;
+}
+
+/* Output byte in buffer */
+Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output)
+{
+        bool bit;
+
+        while (b->len < stop)
+	{
+                bit = get_bit(b);
+		if (n->right == NULL && n->left == NULL)
+		{
+			fwrite(&n->value,1,sizeof(n->value),output);
+			n=top;
+		} 
+		else
+		{
+                	n = (bit == false) ? n->left : n->right;
+			assert(n != NULL);
+
+                	if (n->right == NULL && n->left == NULL)
+			{
+                        	fwrite(&n->value,1,sizeof(n->value),output);
+                        	n=top;
+                	}
+		}
+                b->len++;
+        }
+        return n;
+}
+
+uint8_t get_val(Buffer *b, FILE *fp)
+{
+	assert(b != NULL);
+	assert(fp != NULL);
+
+	uint8_t c = 0;
+
+	c |= (b->buf << b->len );
+	/* get the next byte */
+	fread(&b->buf,1,sizeof(b->buf),fp);
+
+	c |= (b->buf >> (CHAR_BIT*sizeof(b->buf) - b->len));
+	/* note that b->len remains the same as we've moved a whole byte over */
+
+	return c;
+}
+
+/* Usage information */
+Node *get_node(Buffer *b, FILE *fp)
+{
+	assert(b != NULL);
+	assert(fp != NULL);
+
+	bool bit = get_bit(b);
+
+	/* If we've not reached the end of the byte, iterate the length *
+ 	 * counter, else get the next byte from the file		*/
+	if (b->len < (CHAR_BIT*sizeof(b->buf) - 1))
+	{
+		b->len++;
+	} 
+	else
+	{
+		fread(&b->buf,1,1,fp);
+		b->len = 0;
+	}
+	
+	Node *n = calloc(1,sizeof(Node));
+	if (n == NULL)
+	{
+		fprintf(stderr,"Out of memory\n");
+		exit(EXIT_FAILURE);
+	}
+	assert(n != NULL);
+
+	if (bit == true)
+	{
+		n->value = get_val(b,fp);
+		n->left  = NULL;
+		n->right = NULL;
+	}
+	else
+	{
+		Node *left  = get_node(b,fp);
+		Node *right = get_node(b,fp);
+
+		n->value = 0;
+		n->left  = left;
+		n->right = right;
+	}
+	return n;
+}
+
+Node *get_tree(FILE *fp)
+{
+	assert(fp != NULL);
+
+	Buffer b;
+	b.buf = 0;
+	b.len = 0;
+
+	/* read in the first byte */
+	fread(&b.buf,1,1,fp);
+	/* get the node tree */
+	return get_node(&b,fp);
+}
+
+
 /* Return the root node in a Symbol tree */
 Symbol *get_root(Symbol *t) {
 	assert(t != NULL);
@@ -527,12 +744,19 @@ Symbol *get_root(Symbol *t) {
 	return tree;
 }
 
-/* Usage information */
 void usage(char *argv[]) {
-	printf("%s [-s] file [outfile]\n",argv[0]);
+	printf("%s [-sc",argv[0]);
+#ifndef UNHUFFMAN
+	printf("u");
+#endif
+	printf("] [file] [outfile]\n");
 	printf("\n");
 	printf("Options:\n");
 	printf("-s: print compression statistics to STDOUT\n");
+#ifndef UNHUFFMAN
+	printf("-u: decompress the input file\n");
+#endif
+	printf("-c: take STDIN as the input file\n");
 	printf("\nIf no outfile is specifed STDOUT will be used\n");
 }
 
@@ -540,6 +764,7 @@ void usage(char *argv[]) {
 struct opts optparse(int argc, char *argv[])
 {
 	char c;
+	bool standard_input = false;
 	struct opts options = { .unhuffman  = false, .statistics = false,
 		   		.infile = NULL, .outfile = NULL };
 
@@ -555,6 +780,9 @@ struct opts optparse(int argc, char *argv[])
 			case 's':
 				options.statistics = true;
 				break;
+			case 'c':
+				standard_input = true;
+				break;
 			default:
 				fprintf(stderr,"Illegal option: %c\n", c);
 				usage(argv);
@@ -562,15 +790,22 @@ struct opts optparse(int argc, char *argv[])
 			}
 		}
 	}
-	if (argc > 0)
+	if (argc > 0 || (standard_input == true) )
 	{
-		options.infile = fopen(argv[0],"rb");
-		if (options.infile == NULL)
+		if (standard_input == true)
 		{
-			fprintf(stderr,"Failed to open file: %s\n",argv[0]);
-			exit(2);
+			options.infile = stdin;
 		}
-		argc--;
+		else
+		{
+			options.infile = fopen(argv[0],"rb");
+			if (options.infile == NULL)
+			{
+				fprintf(stderr,"Failed to open file: %s\n",argv[0]);
+				exit(2);
+			}
+			argc--;
+		}
 		if (argc > 0)
 		{
 			options.outfile = fopen(argv[1],"wb");
@@ -652,9 +887,31 @@ int huffman(f_stat *in, f_stat *out)
 	return rc;
 }
 
+/* Perform a decompression on the huffman encoded `in' file. */
+int unhuffman(f_stat *in, f_stat *out)
+{
+	Node *n;
+
+	if (check_header(in->file) != 0)
+	{
+		fprintf(stderr,"File not encoded by huffman\n");
+		return EXIT_FAILURE;
+	}
+
+	n = get_tree(in->file);
+
+	output_message(n,in->file,out->file);
+
+	/* Free node tree */
+	free_node(n);
+
+	return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[]) {
 	f_stat in;
 	f_stat out;
+	int rc;
 
 	/* Process the input arguments */
 	struct opts options = optparse(argc,argv);
@@ -664,8 +921,19 @@ int main(int argc, char *argv[]) {
 	out.byte_count = 0;
 	out.file       = options.outfile;
 
-	int rc = huffman(&in,&out);
-	
+#ifdef UNHUFFMAN
+	options.unhuffman = true;
+#endif
+
+	if (options.unhuffman)
+	{
+		rc = unhuffman(&in,&out);
+	}
+	else
+	{
+		rc = huffman(&in,&out);
+	}
+
 	/* Finally we close the input and output file */
 	fclose_stat(&in);
 	fclose_stat(&out);

@@ -4,7 +4,7 @@ PATH="../:$PATH"
 INFILE="resources/null.txt"
 OUTFILE="null.huff"
 
-valgrind --error-exitcode=1  huffman ${INFILE} ${OUTFILE} &>/dev/null
+valgrind --error-exitcode=1 huffman ${INFILE} ${OUTFILE} &>/dev/null
 rc=$?;
 
 rm $OUTFILE;

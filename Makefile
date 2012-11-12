@@ -11,13 +11,13 @@ huff: src/huffman.c lib/huffman.h src/file_stat.c lib/file_stat.h
 	$(CC) $(CFLAGS) $(LDFLAGS) src/huffman.c src/file_stat.c -o huffman
 
 # Build the decoder
-unhuff: src/unhuffman.c lib/huffman.h
-	$(CC) $(CFLAGS) $(LDFLAGS) src/unhuffman.c -o unhuffman
+unhuff: src/huffman.c lib/huffman.h
+	$(CC) $(CFLAGS) $(LDFLAGS) -DUNHUFFMAN src/huffman.c src/file_stat.c -o unhuffman
 
 # Include debug flag in compilation
 debug:  src/huffman.c src/unhuffman.c lib/huffman.h 
 	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) src/huffman.c src/file_stat.c -o huffman
-	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) src/unhuffman.c -o unhuffman
+	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) -DUNHUFFMAN src/huffman.c src/file_stat.c -o unhuffman
 
 # Run the regression tests
 tests: huff unhuff
