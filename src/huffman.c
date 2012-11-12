@@ -774,9 +774,11 @@ struct opts optparse(int argc, char *argv[])
 		{
 			switch (c)
 			{
+#ifndef UNHUFFMAN
 			case 'u':
 				options.unhuffman = true;
 				break;
+#endif
 			case 's':
 				options.statistics = true;
 				break;
