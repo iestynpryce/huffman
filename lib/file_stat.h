@@ -1,5 +1,7 @@
 /* Abstraction of file read and write functions to collect data *
  * about the reads and writes.                                  */
+#ifndef FILE_STAT_H
+#define FILE_STAT_H
 
 #include <stdio.h>
 
@@ -27,3 +29,5 @@ int fflush_stat(f_stat *stream);
 
 /* Equivalent of fclose */
 int fclose_stat(f_stat *stream);
+
+#endif
