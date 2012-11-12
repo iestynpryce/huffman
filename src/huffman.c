@@ -545,6 +545,13 @@ struct opts optparse(int argc, char *argv[])
 	options.unhuffman  = false;
 	options.statistics = false;
 
+	/*if (argc < 2)
+	{
+		fprintf(stderr,"Expected at least 1 argument\n");
+		usage(argv);
+		exit(2);
+	}*/
+
 	while (--argc > 0 && (*++argv)[0] == '-')
 	{
 		while ((c = *++argv[0]) != 0)
@@ -587,6 +594,12 @@ struct opts optparse(int argc, char *argv[])
 		{
 			options.outfile = stdout;
 		}
+	}
+	else
+	{
+		fprintf(stderr,"No input file defined\n");
+		usage(argv);
+		exit(2);
 	}
 	return options;
 }
