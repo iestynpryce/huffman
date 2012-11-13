@@ -4,7 +4,7 @@ PATH="../:$PATH"
 INFILE="resources/ascii_text1.txt"
 OUTFILE="ascii_text1.unhuff"
 
-huffman ${INFILE} | unhuffman -c > ${OUTFILE}
+huffman -c ${INFILE} | unhuffman -c - > ${OUTFILE}
 diff -a ${INFILE} ${OUTFILE} &>/dev/null
 rc=$?;
 

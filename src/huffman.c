@@ -7,6 +7,7 @@
 #include "file_stat.h"
 
 #include <string.h>
+#include <unistd.h>
 
 /* Tree node structure */
 typedef struct symbol
@@ -756,7 +757,7 @@ void usage(char *argv[]) {
 #ifndef UNHUFFMAN
 	printf("-u: decompress the input file\n");
 #endif
-	printf("-c: take STDIN as the input file\n");
+	printf("-c: output to STDOUT\n");
 	printf("\nIf no outfile is specifed STDOUT will be used\n");
 }
 
@@ -764,53 +765,52 @@ void usage(char *argv[]) {
 struct opts optparse(int argc, char *argv[])
 {
 	char c;
-	bool standard_input = false;
+	bool standard_output = false;
 	struct opts options = { .unhuffman  = false, .statistics = false,
 		   		.infile = NULL, .outfile = NULL };
 
-	while (--argc > 0 && (*++argv)[0] == '-')
+	while ((c = getopt (argc, argv, "csu")) != -1)
 	{
-		while ((c = *++argv[0]) != 0)
+		switch (c)
 		{
-			switch (c)
-			{
+		case 'c':
+			standard_output = true;
+			break;
+		case 's':
+			options.statistics = true;
+			break;
 #ifndef UNHUFFMAN
-			case 'u':
-				options.unhuffman = true;
-				break;
-#endif
-			case 's':
-				options.statistics = true;
-				break;
-			case 'c':
-				standard_input = true;
-				break;
-			default:
-				fprintf(stderr,"Illegal option: %c\n", c);
-				usage(argv);
-				break;
-			}
+		case 'u':
+			options.unhuffman = true;
+			break;
+#endif			
+		default:
+			fprintf(stderr,"Illegal option: %c\n", c);
+			usage(argv);
+			break;
 		}
 	}
-	if (argc > 0 || (standard_input == true) )
+	
+	int index = optind;
+	if (index < argc)
 	{
-		if (standard_input == true)
+		if (*argv[optind] == '-')
 		{
 			options.infile = stdin;
 		}
 		else
 		{
-			options.infile = fopen(argv[0],"rb");
+			options.infile = fopen(argv[optind],"rb");
 			if (options.infile == NULL)
 			{
 				fprintf(stderr,"Failed to open file: %s\n",argv[0]);
 				exit(2);
 			}
-			argc--;
 		}
-		if (argc > 0)
+		index++;
+		if (optind < argc && standard_output == false)
 		{
-			options.outfile = fopen(argv[1],"wb");
+			options.outfile = fopen(argv[optind+1],"wb");
 			if (options.outfile == NULL)
 			{
 				fprintf(stderr,"Failed to open file: %s\n",

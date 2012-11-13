@@ -1,6 +1,6 @@
 # Set compiler and its options
 CC=gcc
-CFLAGS=-g -Wall -Werror --std=c99 -O3
+CFLAGS=-g -Wall -Werror --std=c99 -O3 -D_POSIX_C_SOURCE=200112L
 DEBUG=-DDEBUG
 LDFLAGS=-I lib/
 
