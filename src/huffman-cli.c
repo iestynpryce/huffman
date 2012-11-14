@@ -67,13 +67,13 @@ struct opts optparse(int argc, char *argv[])
 	int index = optind;
 	if (index < argc)
 	{
-		if (*argv[optind] == '-')
+		if (*argv[index] == '-')
 		{
 			options.infile = stdin;
 		}
 		else
 		{
-			options.infile = fopen(argv[optind],"rb");
+			options.infile = fopen(argv[index],"rb");
 			if (options.infile == NULL)
 			{
 				fprintf(stderr,"Failed to open file: %s\n",argv[0]);
@@ -81,9 +81,9 @@ struct opts optparse(int argc, char *argv[])
 			}
 		}
 		index++;
-		if (optind < argc && standard_output == false)
+		if (index < argc && standard_output == false)
 		{
-			options.outfile = fopen(argv[optind+1],"wb");
+			options.outfile = fopen(argv[index],"wb");
 			if (options.outfile == NULL)
 			{
 				fprintf(stderr,"Failed to open file: %s\n",
