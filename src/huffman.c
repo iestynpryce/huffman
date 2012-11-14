@@ -604,6 +604,7 @@ void free_node(Node *n)
 /* Given the huffman tree, decompress the file to the output */
 void output_message(Node *n, FILE *input, FILE *output)
 {
+	/* Define assumptions with assert */
 	assert(n != NULL);
 	assert(input != NULL);
 	assert(output != NULL);
@@ -673,6 +674,7 @@ Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output)
         return n;
 }
 
+/* Return entire character from file, starting at current buffer location*/
 uint8_t get_val(Buffer *b, FILE *fp)
 {
 	assert(b != NULL);
@@ -690,9 +692,9 @@ uint8_t get_val(Buffer *b, FILE *fp)
 	return c;
 }
 
-/* Usage information */
 Node *get_node(Buffer *b, FILE *fp)
 {
+	/* Assume no input in NULL */
 	assert(b != NULL);
 	assert(fp != NULL);
 
@@ -761,7 +763,8 @@ Symbol *get_root(Symbol *t) {
 
 	Symbol *tree;
 	tree = t;
-	while (tree->parent != NULL) { 
+	while (tree->parent != NULL) 
+	{ 
 		tree=tree->parent; 
 	}
 	return tree;
@@ -864,7 +867,8 @@ int unhuffman(f_stat *in, f_stat *out)
 
 	if (check_header(in->file) != 0)
 	{
-		fprintf(stderr,"File not encoded by huffman\n");
+		//fprintf(stderr,"File not encoded by huffman\n");
+		perror("File not encoded by huffman\n");
 		return EXIT_FAILURE;
 	}
 
