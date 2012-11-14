@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <limits.h>
+#include <errno.h>
 #include <assert.h>
 
 /* Tree node structure */
@@ -55,6 +56,7 @@ typedef struct {
 } Buffer;
 
 Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output);
+void free_tree(Symbol *t);
 
 void print_ll(Symbol *s)
 {
@@ -152,7 +154,7 @@ Symbol *sort_ll(Symbol* s)
 }
 
 /* Create a linked list of statistics for bytes in the input */
-Symbol *build_statistics( f_stat *fp)
+Symbol *build_statistics(f_stat *fp)
 {
 	assert(fp != NULL);
 
@@ -162,8 +164,8 @@ Symbol *build_statistics( f_stat *fp)
 	start = calloc(1,sizeof(Symbol));
 	if (start == NULL )
 	{
-		fprintf(stderr,"Out of memory\n");
-		exit(EXIT_FAILURE);
+		/* Out of memory */
+		return NULL;
 	}
 
 	start->symbol = fgetc_stat(fp);
@@ -183,8 +185,9 @@ Symbol *build_statistics( f_stat *fp)
 			s->next = calloc(1,sizeof(Symbol));
 			if (s->next == NULL)
 			{
-				fprintf(stderr,"Out of memory\n");
-				exit(EXIT_FAILURE);
+				/* Out of memory */
+				free_tree(start);
+				return NULL;
 			}
 			s=s->next;
 		}
@@ -213,8 +216,8 @@ Symbol** build_tree(Symbol *s)
 	leaves = calloc(nleaves+1,sizeof(Symbol*));
 	if (leaves == NULL)
 	{
-		fprintf(stderr,"Out of memory\n");
-		exit(EXIT_FAILURE);
+		/* Out of memory */
+		return NULL;
 	}
 	leaves[nleaves] = NULL;
 
@@ -230,8 +233,8 @@ Symbol** build_tree(Symbol *s)
 		node = calloc(1,sizeof(Symbol));
 		if (node == NULL)
 		{
-			fprintf(stderr,"Out of memory\n");
-			exit(EXIT_FAILURE);
+			/* Out of memory */
+			return NULL;
 		}
 		node->left = s;
 
@@ -317,8 +320,8 @@ Code *get_codes(Symbol **leaves)
 		c = calloc(1,sizeof(Code));
 		if (c == NULL)
 		{
-			fprintf(stderr,"Out of memory\n");
-			exit(EXIT_FAILURE);
+			/* Out of memory */
+			return NULL;
 		}
 		c->code = NULL;
 		c->length = 0;
@@ -329,8 +332,8 @@ Code *get_codes(Symbol **leaves)
 			b = calloc(1,sizeof(Bits));
 			if (b == NULL)
 			{
-				fprintf(stderr,"Out of memory\n");
-				exit(EXIT_FAILURE);
+				/* Out of memory */
+				return NULL;
 			}
 			b->bit = s->code;
 			b->next = c->code;
@@ -454,7 +457,7 @@ int compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp)
 	return EXIT_SUCCESS;
 }
 
-void encode_node(Symbol *s, f_stat *fp, Buffer *b) {
+int encode_node(Symbol *s, f_stat *fp, Buffer *b) {
 
 	size_t bufsize = CHAR_BIT*sizeof(b->buf);
 
@@ -502,32 +505,44 @@ void encode_node(Symbol *s, f_stat *fp, Buffer *b) {
 		encode_node(s->left, fp, b);
 		encode_node(s->right,fp, b);
 	}
+
+	return 0;
 }
 
 /* Write the Huffman tree as a series of bits */
-void write_tree(Symbol *s, f_stat *fp) {
+int write_tree(Symbol *s, f_stat *fp) {
 	assert(s != NULL);
 	assert(fp != NULL);
 
 	Buffer b;
+	int rc = 0;
 
 	b.buf = 0;
 	b.len = 0;
 
-	encode_node(s,fp,&b);
+	rc = encode_node(s,fp,&b);
+	if (rc != 0)
+	{
+		return rc;
+	}
 
 	/* Ensure that we clear any trailing bits in the buffer */
 	if (b.len != 0) {
 		fputc_stat(b.buf,fp);
 	}
+	return rc;
 }
 
 /* Write out the 'magic number' in the first 4 bytes so we can identify the *
  * compressed file has having been written by this program.                 */
-void write_header(f_stat *fp) {
+int write_header(f_stat *fp) {
 	assert(fp != NULL);
 	const char buf[] = "HUFF";
-	fwrite_stat(buf,4,sizeof(char),fp);
+	if (fwrite_stat(buf,4,sizeof(char),fp) <= 0)
+	{
+		return -1;
+	}
+	return 0;
 }
 
 /* Check that this is file has the correct 'magic number' in the header	*
@@ -539,8 +554,8 @@ int check_header(FILE *fp)
 	char *c = calloc(5,sizeof(char));
 	if (c == NULL)
 	{
-		fprintf(stderr,"Out of memory\n");
-		exit(EXIT_FAILURE);
+		/* Out of memory */
+		return -1;
 	}
 	assert(c != NULL);
 	
@@ -556,7 +571,8 @@ int check_header(FILE *fp)
 }
 
 /* Free memory in a symbol tree */
-void free_tree(Symbol *t) {
+void free_tree(Symbol *t)
+{
 	assert(t != NULL);
 
 	if (t->left != NULL) {
@@ -697,8 +713,8 @@ Node *get_node(Buffer *b, FILE *fp)
 	Node *n = calloc(1,sizeof(Node));
 	if (n == NULL)
 	{
-		fprintf(stderr,"Out of memory\n");
-		exit(EXIT_FAILURE);
+		/* Out of memory*/
+		return NULL;
 	}
 	assert(n != NULL);
 
@@ -712,6 +728,10 @@ Node *get_node(Buffer *b, FILE *fp)
 	{
 		Node *left  = get_node(b,fp);
 		Node *right = get_node(b,fp);
+		if ( left == NULL || right == NULL) {
+			/* Error has occurred */
+			return NULL;
+		}
 
 		n->value = 0;
 		n->left  = left;
@@ -757,13 +777,37 @@ int huffman(f_stat *in, f_stat *out)
 	Bits   *bits,  *b;
 
 	int rc = EXIT_SUCCESS;
+	int ecode = 0;
 
 	/* Collect statistics for the 8bit characters in the file */
 	tree = build_statistics(in);
+	if (tree == NULL)
+	{
+		rc = EXIT_FAILURE;
+		return rc;
+	}
 
 	leaves = build_tree(tree);
+	if (leaves == NULL)
+	{
+		/* Free the tree */
+		free_tree(tree);
+		/* Return failure*/
+		rc = EXIT_FAILURE;
+		return rc;
+	}
 
 	codes = get_codes(leaves);
+	if (codes == NULL)
+	{
+		/* Free tree */
+		free_tree(tree);
+		/* Free leaves */
+		free(leaves);
+		/* Return failure */
+		rc = EXIT_FAILURE;
+		return rc;
+	}
 
 #ifdef DEBUG
 	print_codes_from_tree(leaves);
@@ -772,11 +816,20 @@ int huffman(f_stat *in, f_stat *out)
 	/* Assure that we're is pointing at the top of the tree */
 	tree = get_root(tree);
 
-	write_header(out);
-	write_tree(tree,out);
+	ecode = write_header(out);
+	if (ecode != 0)
+	{
+		rc = EXIT_FAILURE;
+	}
+
+	ecode = write_tree(tree,out);
+	if (ecode != 0)
+	{
+		rc = EXIT_FAILURE;
+	}
+	
 	if (compress_file(codes,in,out) != EXIT_SUCCESS)
 	{
-		fprintf(stderr,"Error compressing file\n");
 		rc = EXIT_FAILURE;
 	}
 
