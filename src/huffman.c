@@ -58,6 +58,7 @@ typedef struct {
 Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output);
 void free_tree(Symbol *t);
 
+/* Prints the symbol and its code as stored in the symbol linked list */
 void print_ll(Symbol *s)
 {
 	assert(s != NULL);
@@ -74,83 +75,61 @@ void print_ll(Symbol *s)
 	}
 }
 
+int symbol_cmp (const Symbol *s1, const Symbol *s2)
+{
+	if (s1->weight < s2->weight)
+	{
+		return -1;
+	}
+	if (s1->weight > s2->weight)
+	{
+		return 1;
+	}
+	/* Both weights are equal */
+	return 0;
+}
+
 /* Sort the linked list by swapping the values
  * Uses the bubble sort algorithm
  */
-Symbol *sort_ll(Symbol* s)
+Symbol *sort_symbol_list(Symbol* s)
 {
-	assert(s != NULL);
-
-	Symbol *top, *top_prev;
-	Symbol *small, *small_prev;
-
-	Symbol *start, *tmp, *prev;
-
-	top = start = s;
-
-	small = top_prev = prev = NULL;
-
-	while (top != NULL)
+	int i;
+	int count = 0;
+	Symbol *start = s;
+	
+	/* Count number of elements in the linked list */
+	do
 	{
-		s=top;
-		/* Try and find a node smaller than the node at the top */ 
-		while (s != NULL)
-		{
-			if ( ( (top->weight > s->weight) 
-				&& (small == NULL || small->weight > s->weight)
-			     )
-			   ||
-			     ( (top->weight == s->weight) 
-				  && (top->symbol > s->symbol)
-			     )
-			   ) 
-			{
-				small = s;
-				small_prev = prev;
-			}
-			prev=s;
-			s=s->next;
-		}
+		count++;
+	} while ((s=s->next));
+	
+	/* Build an array of pointers to symbols*/
+	Symbol **symbol_list = calloc(count,sizeof(Symbol*));
+	s = start;
 
-		if (small != NULL)
-		{
-			/* Make sure the node before the top node is now *
-			 * pointing at the correct new node in the 'top'.*
-			 * When this is the first node in the list make  *
-			 * sure the starting pointer points to the new   *
-			 * node.					 */
-			if (top_prev != NULL)
-			{
-				top_prev->next = small;
-			}
-			else
-			{
-				start = small;
-			}		
-
-			/* Assure that the node before the smallest value *
-			 * changes it's next value to the node at the top *
-			 * of the tree. 				  */
-			small_prev->next = top;
-
-			/* Swap both pointers around */
-			tmp = small->next;
-			small->next = top->next;
-			top->next = tmp;
-
-			/* Reset the top and utility pointers */
-			top_prev = prev = small;
-			top = small->next;
-			small = NULL;
-		} 
-		else
-		{ 
-			top_prev = prev = top;
-			top = top->next;
-		}
-
+	for (i=0; i<count; i++)
+	{
+		symbol_list[i] = s;
+		s = s->next;
 	}
-	return start;	
+
+	/* Sort using qsort */
+	qsort(symbol_list, count, sizeof (Symbol*), (void*)symbol_cmp);
+
+	/* Rebuild the linked list */
+	start = symbol_list[0];
+	s = start;
+	for (i=1; i<count; i++)
+	{
+		s->next = symbol_list[i];
+		s = s->next;
+	}
+	s->next = NULL;
+
+	free(symbol_list);
+
+	return start;
 }
 
 /* Create a linked list of statistics for bytes in the input */
@@ -197,10 +176,8 @@ Symbol *build_statistics(f_stat *fp)
 
 		s=start;
 	}
-
-	start = sort_ll(start);
-
-	return start;
+	
+	return sort_symbol_list(start);
 }
 
 Symbol** build_tree(Symbol *s)
@@ -268,7 +245,7 @@ Symbol** build_tree(Symbol *s)
 
 		/* re-sort the linked list so the two least likely nodes are
  		 *  at the head */
-		s = sort_ll(node);
+		s = sort_symbol_list(node);
 	}
 
 	/* Return an array of pointers to leaf nodes */
