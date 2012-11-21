@@ -23,7 +23,7 @@ typedef struct symbol
 	struct symbol *left;
 	struct symbol *right;
 	unsigned char  symbol;
-	uint8_t        weight;
+	long int       weight;
 	bool           code;
 } Symbol;
 
@@ -67,7 +67,7 @@ void print_ll(Symbol *s)
 
 	while (p != NULL)
 	{
-		printf("%c(%#x) %d",p->symbol,p->symbol,p->weight);
+		printf("%c(%#x) %ld",p->symbol,p->symbol,p->weight);
 		if (p->left != NULL) printf("\tl: %d",p->left->code);
 		if (p->right != NULL) printf("\tr: %d",p->right->code);
 		printf("\n");
@@ -256,7 +256,7 @@ void print_codes_from_tree(Symbol **leaves)
 	{
 		s = leaves[n];
 		assert(s != NULL);
-		printf("%#x|%d|\t",s->symbol,s->weight);
+		printf("%#x|%ld|\t",s->symbol,s->weight);
 		do 
 		{
 			printf("%d ",s->code);
@@ -759,7 +759,6 @@ int huffman(f_stat *in, f_stat *out)
 		rc = EXIT_FAILURE;
 		return rc;
 	}
-
 	leaves = build_tree(tree);
 	if (leaves == NULL)
 	{
