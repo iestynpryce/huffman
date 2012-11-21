@@ -75,18 +75,11 @@ void print_ll(Symbol *s)
 	}
 }
 
-int symbol_cmp (const Symbol *s1, const Symbol *s2)
+int symbol_cmp (const void *s1, const void *s2)
 {
-	if (s1->weight < s2->weight)
-	{
-		return -1;
-	}
-	if (s1->weight > s2->weight)
-	{
-		return 1;
-	}
-	/* Both weights are equal */
-	return 0;
+	const Symbol *_s1 = *(Symbol **)s1;
+	const Symbol *_s2 = *(Symbol **)s2;
+	return _s1->weight - _s2->weight;
 }
 
 /* Sort the linked list by swapping the values
@@ -844,8 +837,8 @@ int unhuffman(f_stat *in, f_stat *out)
 
 	if (check_header(in->file) != 0)
 	{
-		//fprintf(stderr,"File not encoded by huffman\n");
-		perror("File not encoded by huffman\n");
+		fprintf(stderr,"File not encoded by huffman\n");
+		//perror("File not encoded by huffman\n");
 		return EXIT_FAILURE;
 	}
 
