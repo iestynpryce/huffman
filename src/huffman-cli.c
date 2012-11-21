@@ -139,8 +139,10 @@ int main(int argc, char *argv[]) {
 	{
 		/* We multiply the ratio by 2 because we've read the input *
                  * stream twice.					   */
+		printf("Input bytes: %ld\n",in.byte_count/2);
+		printf("Output bytes: %ld\n",out.byte_count);
 		double compression_ratio = (double)2*out.byte_count/in.byte_count;
-		printf("Compression ratio: %.2f\n",compression_ratio);
+		printf("Compression ratio: %.4f\n",compression_ratio);
 	}
 
 	return rc;
