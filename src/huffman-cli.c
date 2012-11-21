@@ -76,7 +76,7 @@ struct opts optparse(int argc, char *argv[])
 			options.infile = fopen(argv[index],"rb");
 			if (options.infile == NULL)
 			{
-				fprintf(stderr,"Failed to open file: %s\n",argv[0]);
+				fprintf(stderr,"Failed to open file: %s\n",argv[index]);
 				exit(2);
 			}
 		}
@@ -87,7 +87,7 @@ struct opts optparse(int argc, char *argv[])
 			if (options.outfile == NULL)
 			{
 				fprintf(stderr,"Failed to open file: %s\n",
-						argv[1]);
+						argv[index]);
 				exit(2);
 			}
 		}
