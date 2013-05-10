@@ -31,6 +31,7 @@ void usage(char *argv[]) {
 	printf("-u: decompress the input file\n");
 #endif
 	printf("-c: output to STDOUT\n");
+	printf("-h: this message\n");
 	printf("\nIf no outfile is specifed STDOUT will be used\n");
 }
 
@@ -38,11 +39,12 @@ void usage(char *argv[]) {
 struct opts optparse(int argc, char *argv[])
 {
 	char c;
+	bool error = false;
 	bool standard_output = false;
 	struct opts options = { .unhuffman  = false, .statistics = false,
 		   		.infile = NULL, .outfile = NULL };
 
-	while ((c = getopt (argc, argv, "csu")) != -1)
+	while ((c = getopt (argc, argv, "csuh")) != -1)
 	{
 		switch (c)
 		{
@@ -57,10 +59,18 @@ struct opts optparse(int argc, char *argv[])
 			options.unhuffman = true;
 			break;
 #endif			
+		case 'h':
+			usage(argv);
+			exit(EXIT_SUCCESS);
 		default:
 			fprintf(stderr,"Illegal option: %c\n", c);
-			usage(argv);
+			error = true;
 			break;
+		}
+		if (error)
+		{
+			usage(argv);
+			exit(2);
 		}
 	}
 	
