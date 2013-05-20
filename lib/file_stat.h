@@ -4,12 +4,18 @@
 #define FILE_STAT_H
 
 #include <stdio.h>
+#include <stdbool.h>
 
 /* Structure for file stream and its statistics */
 typedef struct file_stat
 {
 	FILE    *file;
 	size_t   byte_count;
+	void    *buffer;
+	size_t   buffer_size;
+	size_t   buffer_usage;
+	size_t   buffer_ptr;
+	bool 	 fully_buffered;
 } f_stat;
 
 /* Equivalent of fwrite */

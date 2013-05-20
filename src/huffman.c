@@ -83,7 +83,7 @@ int symbol_cmp (const void *s1, const void *s2)
 }
 
 /* Sort the linked list by swapping the values
- * Uses the bubble sort algorithm
+ * Uses the stdlib qsort algorithm
  */
 Symbol *sort_symbol_list(Symbol* s)
 {

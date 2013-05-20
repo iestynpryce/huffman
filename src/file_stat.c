@@ -1,4 +1,7 @@
 #include "file_stat.h"
+#include <stdlib.h>
+
+#define INIT_BUF_SIZE 24;
 
 size_t fwrite_stat(const void *ptr, size_t size, size_t count, f_stat *stream)
 {
@@ -24,11 +27,64 @@ int fputc_stat (int character, f_stat *stream)
 int fgetc_stat(f_stat *stream)
 {
 	int char_val;
-	
-	char_val = fgetc(stream->file);
-	if (char_val != EOF)
+
+	if (stream->fully_buffered)
+	{
+		if (stream->buffer_ptr >= stream->buffer_usage)
+		{
+			char_val = EOF;
+		}
+		else
+		{
+			char_val = ((int*)stream->buffer)[stream->buffer_ptr];
+			stream->buffer_ptr++;
+		}
+	}
+	else
+	{
+		char_val = fgetc(stream->file);
+	}
+
+	if (char_val != EOF && stream->fully_buffered == false)
 	{
 		stream->byte_count++;
+		if (stream->buffer == NULL)
+		{
+			stream->buffer_size = INIT_BUF_SIZE;
+			stream->buffer = calloc(stream->buffer_size,sizeof(int));
+			if (stream->buffer == NULL)
+			{
+				/* Out of memory */
+				return -1;
+			}
+		}
+		if (stream->buffer != NULL)
+		{
+			if (stream->buffer_size <= stream->buffer_usage)
+			{
+				int new_buffer_size = stream->buffer_size *2;
+				void *tmp = realloc(stream->buffer,new_buffer_size*sizeof(int));
+				if (tmp)
+				{
+					stream->buffer = tmp;
+					stream->buffer_size = new_buffer_size;
+				}
+				else
+				{
+					/* Out of memory */
+					return -1;
+				}
+			}
+			((int*)stream->buffer)[stream->buffer_ptr] = char_val;
+
+			stream->buffer_usage += 1;
+			stream->buffer_ptr = stream->buffer_usage;
+		}
+	}
+	else
+	{
+		/* Mark that we've buffered the entire file */
+		stream->fully_buffered = true;
 	}
 
 	return char_val;
@@ -36,6 +92,7 @@ int fgetc_stat(f_stat *stream)
 
 void rewind_stat(f_stat *stream)
 {
+	stream->buffer_ptr = 0;
 	rewind(stream->file);
 }
 
@@ -46,5 +103,6 @@ int fflush_stat(f_stat *stream)
 
 int fclose_stat(f_stat *stream)
 {
+	free(stream->buffer);
 	return fclose(stream->file);
 }

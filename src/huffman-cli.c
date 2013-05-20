@@ -123,10 +123,20 @@ int main(int argc, char *argv[]) {
 	/* Process the input arguments */
 	struct opts options = optparse(argc,argv);
 
-	in.byte_count  = 0;
-	in.file        = options.infile;
-	out.byte_count = 0;
-	out.file       = options.outfile;
+	in.byte_count      = 0;
+	in.fully_buffered  = false;
+	in.buffer          = NULL;
+	in.buffer_size     = 0;
+	in.buffer_usage    = 0;
+	in.buffer_ptr 	   = 0;
+	in.file            = options.infile;
+	out.byte_count     = 0;
+	out.fully_buffered = false;
+	out.buffer         = NULL;
+	out.buffer_size    = 0;
+	out.buffer_usage   = 0;
+	out.buffer_ptr 	   = 0;
+	out.file           = options.outfile;
 
 #ifdef UNHUFFMAN
 	options.unhuffman = true;
