@@ -137,6 +137,7 @@ Symbol *build_statistics(f_stat *fp)
 	if (start == NULL )
 	{
 		/* Out of memory */
+		perror("Unable to allocate memory");
 		return NULL;
 	}
 
@@ -158,6 +159,7 @@ Symbol *build_statistics(f_stat *fp)
 			if (s->next == NULL)
 			{
 				/* Out of memory */
+				perror("Unable to allocate memory");
 				free_tree(start);
 				return NULL;
 			}
@@ -187,6 +189,7 @@ Symbol** build_tree(Symbol *s)
 	if (leaves == NULL)
 	{
 		/* Out of memory */
+		perror("Unable to allocate memory");
 		return NULL;
 	}
 	leaves[nleaves] = NULL;
@@ -291,6 +294,7 @@ Code *get_codes(Symbol **leaves)
 		if (c == NULL)
 		{
 			/* Out of memory */
+			perror("Unable to allocate memory");
 			return NULL;
 		}
 		c->code = NULL;
@@ -303,6 +307,7 @@ Code *get_codes(Symbol **leaves)
 			if (b == NULL)
 			{
 				/* Out of memory */
+				perror("Unable to allocate memory");
 				return NULL;
 			}
 			b->bit = s->code;
@@ -525,6 +530,7 @@ int check_header(FILE *fp)
 	if (c == NULL)
 	{
 		/* Out of memory */
+		perror("Unable to allocate memory");
 		return -1;
 	}
 	assert(c != NULL);

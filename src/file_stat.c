@@ -55,6 +55,7 @@ int fgetc_stat(f_stat *stream)
 			if (stream->buffer == NULL)
 			{
 				/* Out of memory */
+				perror("Unable to allocate memory for stream buffer");
 				return -1;
 			}
 		}
@@ -72,6 +73,7 @@ int fgetc_stat(f_stat *stream)
 				else
 				{
 					/* Out of memory */
+					perror("Unable to allocate memory for stream buffer");
 					return -1;
 				}
 			}
