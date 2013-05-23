@@ -22,13 +22,18 @@ debug:  src/huffman.c lib/huffman.h file_stat.o
 	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) src/huffman-cli.c src/huffman.c file_stat.o -o huffman
 	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) -DUNHUFFMAN src/huffman-cli.c src/huffman.c file_stat.o -o unhuffman
 
+# Build the unit tests
+unittest: tests/src/test_file_stat.c tests/src/minunit.h file_stat.o
+	$(CC) $(CDFLAGS) $(DEBUG) $(LDFLAGS) tests/src/test_file_stat.c file_stat.o -o tests/c_test_file_stat
+
 # Run the regression tests
-tests: cli 
+tests: cli unittest
 	./tests/run_tests.sh
+	./tests/c_test_file_stat
 
 # Build binary output tool
 bd: tools/bd.c
 	$(CC) $(CFLAGS) $(LDFLAGS) tools/bd.c -o bd
 
 clean:
-	rm -rf huffman unhuffman bd *.o
+	rm -rf huffman unhuffman bd *.o tests/c_test*
