@@ -1,6 +1,6 @@
 #include "file_stat.h"
-#include "file_stat_error.h"
 #include "minunit.h"
+#include "file_stat_error.h"
 
 #include <stdio.h>
 
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 		printf("%s\n", result);
 	}
 	else {
-		printf("ALL TESTS PASSED\n");
+		printf("%s: ALL TESTS PASSED\n",argv[0]);
 	}
 	printf("Tests run in %s: %d\n", argv[0],tests_run);
 
