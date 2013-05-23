@@ -14,7 +14,7 @@ cli: src/huffman-cli.c huffman.o file_stat.o
 huffman.o: src/huffman.c lib/huffman.h 
 	$(CC) $(CFLAGS) $(LDFLAGS) -c src/huffman.c 
 
-file_stat.o: lib/file_stat.h src/file_stat.c
+file_stat.o: lib/file_stat.h lib/file_stat_error.h src/file_stat.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -c src/file_stat.c
 
 # Include debug flag in compilation

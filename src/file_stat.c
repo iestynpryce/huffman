@@ -1,13 +1,25 @@
 #include "file_stat.h"
+#include "file_stat_error.h"
 #include <stdlib.h>
+#include <errno.h>
 
 #define INIT_BUF_SIZE 24;
 
 size_t fwrite_stat(const void *ptr, size_t size, size_t count, f_stat *stream)
 {
 	size_t write_count;
+
+	/* Validate input */
+	if (ptr == NULL || stream == NULL)
+	{
+		return E_UNEXPECTED_NULL_POINTER;
+	}
 	
 	write_count = fwrite(ptr,size,count,stream->file);
+	if (ferror(stream->file))
+	{
+		return E_FAILED_FILE_WRITE;
+	}		
 	stream->byte_count += write_count*size;
 	
 	return write_count;
@@ -16,17 +28,31 @@ size_t fwrite_stat(const void *ptr, size_t size, size_t count, f_stat *stream)
 int fputc_stat (int character, f_stat *stream)
 {
 	int ret_char;
-	ret_char = fputc(character,stream->file);
-	if (ret_char != EOF)
+
+	/* Validate input */
+	if (stream == NULL)
 	{
-		stream->byte_count++;
+		return E_UNEXPECTED_NULL_POINTER;
 	}
+
+	ret_char = fputc(character,stream->file);
+	if (ret_char == EOF)
+	{
+		return E_FAILED_FILE_WRITE;
+	}
+	stream->byte_count++;
+
 	return ret_char;
 }
 
 int fgetc_stat(f_stat *stream)
 {
 	int char_val;
+
+	if (stream == NULL)
+	{
+		return E_UNEXPECTED_NULL_POINTER;
+	}
 
 	if (stream->fully_buffered)
 	{
@@ -43,6 +69,10 @@ int fgetc_stat(f_stat *stream)
 	else
 	{
 		char_val = fgetc(stream->file);
+		if (ferror(stream->file))
+		{
+			return errno;
+		}
 	}
 
 	if (char_val != EOF && stream->fully_buffered == false)
@@ -56,7 +86,7 @@ int fgetc_stat(f_stat *stream)
 			{
 				/* Out of memory */
 				perror("Unable to allocate memory for stream buffer");
-				return -1;
+				return E_OUT_OF_MEMORY;
 			}
 		}
 		if (stream->buffer != NULL)
@@ -74,7 +104,7 @@ int fgetc_stat(f_stat *stream)
 				{
 					/* Out of memory */
 					perror("Unable to allocate memory for stream buffer");
-					return -1;
+					return E_OUT_OF_MEMORY;
 				}
 			}
 			((int*)stream->buffer)[stream->buffer_ptr] = char_val;
@@ -92,19 +122,34 @@ int fgetc_stat(f_stat *stream)
 	return char_val;
 }
 
-void rewind_stat(f_stat *stream)
+int rewind_stat(f_stat *stream)
 {
+	if (stream == NULL)
+	{
+		return E_UNEXPECTED_NULL_POINTER;
+	}
+
 	stream->buffer_ptr = 0;
 	rewind(stream->file);
+	return stream->buffer_ptr;
 }
 
 int fflush_stat(f_stat *stream)
 {
+	if (stream == NULL)
+	{
+		return E_UNEXPECTED_NULL_POINTER;
+	}
 	return fflush(stream->file);
 }
 
 int fclose_stat(f_stat *stream)
 {
+	if (stream == NULL)
+	{
+		return E_UNEXPECTED_NULL_POINTER;
+	}
+
 	free(stream->buffer);
 	return fclose(stream->file);
 }

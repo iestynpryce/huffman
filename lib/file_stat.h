@@ -28,7 +28,7 @@ int fputc_stat (int character, f_stat *stream);
 int fgetc_stat(f_stat *stream);
 
 /* Equivalent of rewind */
-void rewind_stat(f_stat *stream);
+int rewind_stat(f_stat *stream);
 
 /* Equivalent of fflush */
 int fflush_stat(f_stat *stream);

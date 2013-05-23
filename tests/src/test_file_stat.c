@@ -1,4 +1,5 @@
 #include "file_stat.h"
+#include "file_stat_error.h"
 #include "minunit.h"
 
 #include <stdio.h>
@@ -7,37 +8,45 @@ int tests_run = 0;
 
 static char *test_fwrite_stat()
 {
-	mu_assert("message",1);
+	/* Setup for test */
+	size_t size = 0;
+	size_t count = 0;
+	void *ptr = NULL;
+	f_stat *stream = NULL;
+
+	mu_assert("null inputs != rc = E_UNEXPECTED_NULL_POINTER",fwrite_stat(ptr,size,count,stream) == E_UNEXPECTED_NULL_POINTER);
 	return NULL;
 }
 
 static char *test_fputc_stat()
 {
-	mu_assert("message",1);
+	f_stat *stream = NULL;
+	int c = 'c';
+	mu_assert("fputc_stat(,null) != E_UNEXPECTED_NULL_POINTER",fputc_stat(c,stream)==E_UNEXPECTED_NULL_POINTER);
 	return NULL;
 }
 
 static char *test_fgetc_stat()
 {
-	mu_assert("message",1);
+	mu_assert("fgetc_stat(NULL) != E_UNEXPECTED_NULL_POINTER",fgetc_stat(NULL)==E_UNEXPECTED_NULL_POINTER);
 	return NULL;
 }
 
 static char *test_rewind_stat()
 {
-	mu_assert("message",1);
+	mu_assert("rewind_stat(NULL) != E_UNEXPECTED_NULL_POINTER",rewind_stat(NULL)==E_UNEXPECTED_NULL_POINTER);
 	return NULL;
 }
 
 static char *test_fflush_stat()
 {
-	mu_assert("message",1);
+	mu_assert("fflush_stat(NULL) != E_UNEXPECTED_NULL_POINTER",fflush_stat(NULL)==E_UNEXPECTED_NULL_POINTER);
 	return NULL;
 }
 
 static char *test_fclose_stat()
 {
-	mu_assert("message",1);
+	mu_assert("fclose_stat(NULL) != E_UNEXPECTED_NULL_POINTER",fclose_stat(NULL)==E_UNEXPECTED_NULL_POINTER);
 	return NULL;
 }
 
