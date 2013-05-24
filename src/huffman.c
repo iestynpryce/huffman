@@ -5,6 +5,7 @@
 
 #include "huffman.h"
 #include "file_stat.h"
+#include "file_stat_error.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -77,6 +78,12 @@ void print_ll(Symbol *s)
 
 int symbol_cmp (const void *s1, const void *s2)
 {
+	/* Validate the input */
+	if (s1 == NULL || s2 == NULL)
+	{
+		return E_UNEXPECTED_NULL_POINTER;
+	}
+
 	const Symbol *_s1 = *(Symbol **)s1;
 	const Symbol *_s2 = *(Symbol **)s2;
 	return _s1->weight - _s2->weight;
