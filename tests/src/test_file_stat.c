@@ -62,12 +62,15 @@ static char *all_tests()
 	return NULL;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	char *result = all_tests();
-	if (result != 0) {
+	if (result != 0)
+       	{
 		printf("%s\n", result);
 	}
-	else {
+	else 
+	{
 		printf("%s: ALL TESTS PASSED\n",argv[0]);
 	}
 	printf("Tests run in %s: %d\n", argv[0],tests_run);
