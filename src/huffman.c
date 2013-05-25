@@ -5,7 +5,7 @@
 
 #include "huffman.h"
 #include "file_stat.h"
-#include "file_stat_error.h"
+#include "huffman_errno.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -15,18 +15,6 @@
 #include <limits.h>
 #include <errno.h>
 #include <assert.h>
-
-/* Tree node structure */
-typedef struct symbol
-{
-	struct symbol *next;
-	struct symbol *parent;
-	struct symbol *left;
-	struct symbol *right;
-	unsigned char  symbol;
-	long int       weight;
-	bool           code;
-} Symbol;
 
 /* Structure to build a linked list of bits */
 typedef struct bits
@@ -76,13 +64,11 @@ void print_ll(Symbol *s)
 	}
 }
 
+/* Comparison function to be used by the C library qsort(...) function */
 int symbol_cmp (const void *s1, const void *s2)
 {
 	/* Validate the input */
-	if (s1 == NULL || s2 == NULL)
-	{
-		return E_UNEXPECTED_NULL_POINTER;
-	}
+	assert(s1 != NULL && s2 != NULL);
 
 	const Symbol *_s1 = *(Symbol **)s1;
 	const Symbol *_s2 = *(Symbol **)s2;

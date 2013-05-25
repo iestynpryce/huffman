@@ -13,8 +13,14 @@ int tests_run = 0;
 
 static char *test_symbol_cmp()
 {
-	mu_assert("symbol_cmp(NULL,NULL) != E_UNEXPECTED_NULL_POINTER",symbol_cmp(NULL,NULL)==E_UNEXPECTED_NULL_POINTER);
+	Symbol symbol1, symbol2;
+	symbol1.weight   = 0;
+	symbol2.weight   = 1;
+	Symbol *s1_ptr = &symbol1;
+	Symbol *s2_ptr = &symbol2;
 
+	mu_assert("symbol1.weight != symbol1.weight", symbol_cmp(&s1_ptr,&s1_ptr) == 0);
+	mu_assert("symbol1.weight == symbol2.weight", symbol_cmp(&s1_ptr,&s2_ptr) != 0);
 	return NULL;
 }
 
