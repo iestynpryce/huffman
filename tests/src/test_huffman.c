@@ -5,7 +5,6 @@
 
 #include "huffman.h"
 #include "minunit.h"
-#include "file_stat_error.h"
 #include "huffman_errno.h"
 
 #include <stdio.h>

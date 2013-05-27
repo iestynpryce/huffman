@@ -4,7 +4,6 @@
  */
 
 #include "huffman.h"
-#include "file_stat.h"
 #include "huffman_errno.h"
 
 #include <string.h>
