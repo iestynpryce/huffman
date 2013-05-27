@@ -6,6 +6,7 @@
 #include "huffman.h"
 #include "minunit.h"
 #include "file_stat_error.h"
+#include "huffman_errno.h"
 
 #include <stdio.h>
 
@@ -24,9 +25,23 @@ static char *test_symbol_cmp()
 	return NULL;
 }
 
+static char *test_unhuffman()
+{
+	mu_assert("unhuffman != HUFF_INVALIDARG", unhuffman(NULL,NULL) == HUFF_INVALIDARG);
+	return NULL;
+}
+
+static char *test_huffman()
+{
+	mu_assert("huffman != HUFF_INVALIDARG", huffman(NULL,NULL) == HUFF_INVALIDARG);
+	return NULL;
+}
+
 char *all_tests()
 {
 	mu_run_test(test_symbol_cmp);
+	mu_run_test(test_unhuffman);
+	mu_run_test(test_huffman);
 
 	return NULL;
 }

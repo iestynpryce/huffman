@@ -748,14 +748,20 @@ int huffman(f_stat *in, f_stat *out)
 	Code   *codes, *c;
 	Bits   *bits,  *b;
 
-	int rc = EXIT_SUCCESS;
+	int rc = HUFF_SUCCESS;
 	int ecode = 0;
+
+	/* Validate the inputs */
+	if (in == NULL || out == NULL)
+	{
+		return HUFF_INVALIDARG;
+	}
 
 	/* Collect statistics for the 8bit characters in the file */
 	tree = build_statistics(in);
 	if (tree == NULL)
 	{
-		rc = EXIT_FAILURE;
+		rc = HUFF_FAILURE;
 		return rc;
 	}
 	leaves = build_tree(tree);
@@ -764,7 +770,7 @@ int huffman(f_stat *in, f_stat *out)
 		/* Free the tree */
 		free_tree(tree);
 		/* Return failure*/
-		rc = EXIT_FAILURE;
+		rc = HUFF_FAILURE;
 		return rc;
 	}
 
@@ -776,7 +782,7 @@ int huffman(f_stat *in, f_stat *out)
 		/* Free leaves */
 		free(leaves);
 		/* Return failure */
-		rc = EXIT_FAILURE;
+		rc = HUFF_FAILURE;
 		return rc;
 	}
 
@@ -790,18 +796,18 @@ int huffman(f_stat *in, f_stat *out)
 	ecode = write_header(out);
 	if (ecode != 0)
 	{
-		rc = EXIT_FAILURE;
+		rc = HUFF_FAILURE;
 	}
 
 	ecode = write_tree(tree,out);
 	if (ecode != 0)
 	{
-		rc = EXIT_FAILURE;
+		rc = HUFF_FAILURE;
 	}
 	
-	if (compress_file(codes,in,out) != EXIT_SUCCESS)
+	if (compress_file(codes,in,out) != HUFF_SUCCESS)
 	{
-		rc = EXIT_FAILURE;
+		rc = HUFF_FAILURE;
 	}
 
 	/* Start freeing allocated memory */
@@ -829,15 +835,21 @@ int huffman(f_stat *in, f_stat *out)
 }
 
 /* Perform a decompression on the huffman encoded `in' file. */
-int unhuffman(f_stat *in, f_stat *out)
+HUFF_ERR unhuffman(f_stat *in, f_stat *out)
 {
 	Node *n;
 
+	/* Validate the inputs are not null */
+	if (in == NULL || out == NULL)
+	{
+		return HUFF_INVALIDARG;
+	}
+
+	/* Validate that the input file was encoded by this huffman encoder */
 	if (check_header(in->file) != 0)
 	{
 		fprintf(stderr,"File not encoded by huffman\n");
-		//perror("File not encoded by huffman\n");
-		return EXIT_FAILURE;
+		return HUFF_FAILURE;
 	}
 
 	n = get_tree(in->file);
@@ -847,6 +859,6 @@ int unhuffman(f_stat *in, f_stat *out)
 	/* Free node tree */
 	free_node(n);
 
-	return EXIT_SUCCESS;
+	return HUFF_SUCCESS;
 }
 
