@@ -44,8 +44,8 @@ typedef struct {
 	int	        len;
 } Buffer;
 
-Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output);
-void free_tree(Symbol *t);
+Node  *_output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output);
+void _free_tree(Symbol *t);
 
 /* Prints the symbol and its code as stored in the symbol linked list */
 void print_ll(Symbol *s)
@@ -65,7 +65,7 @@ void print_ll(Symbol *s)
 }
 
 /* Comparison function to be used by the C library qsort(...) function */
-int symbol_cmp (const void *s1, const void *s2)
+int _symbol_cmp (const void *s1, const void *s2)
 {
 	/* Validate the input */
 	assert(s1 != NULL && s2 != NULL);
@@ -78,7 +78,7 @@ int symbol_cmp (const void *s1, const void *s2)
 /* Sort the linked list by swapping the values
  * Uses the stdlib qsort algorithm
  */
-Symbol *sort_symbol_list(Symbol* s)
+Symbol *_sort_symbol_list(Symbol* s)
 {
 	int i;
 	int count = 0;
@@ -101,7 +101,7 @@ Symbol *sort_symbol_list(Symbol* s)
 	}
 
 	/* Sort using qsort */
-	qsort(symbol_list, count, sizeof (Symbol*), (void*)symbol_cmp);
+	qsort(symbol_list, count, sizeof (Symbol*), (void*)_symbol_cmp);
 
 	/* Rebuild the linked list */
 	start = symbol_list[0];
@@ -119,7 +119,7 @@ Symbol *sort_symbol_list(Symbol* s)
 }
 
 /* Create a linked list of statistics for bytes in the input */
-Symbol *build_statistics(f_stat *fp)
+Symbol *_build_statistics(f_stat *fp)
 {
 	assert(fp != NULL);
 
@@ -153,7 +153,7 @@ Symbol *build_statistics(f_stat *fp)
 			{
 				/* Out of memory */
 				perror("Unable to allocate memory");
-				free_tree(start);
+				_free_tree(start);
 				return NULL;
 			}
 			s=s->next;
@@ -165,10 +165,10 @@ Symbol *build_statistics(f_stat *fp)
 		s=start;
 	}
 	
-	return sort_symbol_list(start);
+	return _sort_symbol_list(start);
 }
 
-Symbol** build_tree(Symbol *s)
+Symbol** _build_tree(Symbol *s)
 {
 	assert (s != NULL);
 
@@ -234,7 +234,7 @@ Symbol** build_tree(Symbol *s)
 
 		/* re-sort the linked list so the two least likely nodes are
  		 *  at the head */
-		s = sort_symbol_list(node);
+		s = _sort_symbol_list(node);
 	}
 
 	/* Return an array of pointers to leaf nodes */
@@ -266,7 +266,7 @@ void print_codes_from_tree(Symbol **leaves)
 /* Based on the leaves in the huffman encoding tree, return a linked list *
  * of codes, comprising of the symbol and the binary huffman encoding of  *
  * the symbol                                                             */
-Code *get_codes(Symbol **leaves)
+Code *_get_codes(Symbol **leaves)
 {
 	assert(leaves != NULL);
 
@@ -330,7 +330,7 @@ Code *get_codes(Symbol **leaves)
 	return codes;
 }
 
-Code *get_char_code(unsigned char c, Code *codes)
+Code *_get_char_code(unsigned char c, Code *codes)
 {
 	assert(codes != NULL);
 
@@ -343,7 +343,7 @@ Code *get_char_code(unsigned char c, Code *codes)
 }
 
 /* Return the bit value of the current bit defined in the buffer */
-bool get_bit(Buffer *b)
+bool _get_bit(Buffer *b)
 {
 	assert(b != NULL);
 	uint8_t i = 0x01;
@@ -360,7 +360,7 @@ bool get_bit(Buffer *b)
 /* Read the file in again, using the codebook generated to output the compressed
  * symbols
  */
-int compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp) 
+int _compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp) 
 {
 	assert(codes != NULL);
 	assert(in_fp != NULL);
@@ -379,7 +379,7 @@ int compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp)
 	/* Read every byte in the file */
 	while ((c=fgetc_stat(in_fp)) != EOF)
 	{
-		code = get_char_code(c,codes_start);
+		code = _get_char_code(c,codes_start);
 		assert(code != NULL);
 		Bits *b = code->code;
 
@@ -425,7 +425,7 @@ int compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp)
 	return EXIT_SUCCESS;
 }
 
-int encode_node(Symbol *s, f_stat *fp, Buffer *b) {
+int _encode_node(Symbol *s, f_stat *fp, Buffer *b) {
 
 	size_t bufsize = CHAR_BIT*sizeof(b->buf);
 
@@ -470,15 +470,15 @@ int encode_node(Symbol *s, f_stat *fp, Buffer *b) {
 			b->len = 0;
 		}
 		/* Go down both branches */
-		encode_node(s->left, fp, b);
-		encode_node(s->right,fp, b);
+		_encode_node(s->left, fp, b);
+		_encode_node(s->right,fp, b);
 	}
 
 	return 0;
 }
 
 /* Write the Huffman tree as a series of bits */
-int write_tree(Symbol *s, f_stat *fp) {
+int _write_tree(Symbol *s, f_stat *fp) {
 	assert(s != NULL);
 	assert(fp != NULL);
 
@@ -488,7 +488,7 @@ int write_tree(Symbol *s, f_stat *fp) {
 	b.buf = 0;
 	b.len = 0;
 
-	rc = encode_node(s,fp,&b);
+	rc = _encode_node(s,fp,&b);
 	if (rc != 0)
 	{
 		return rc;
@@ -503,7 +503,7 @@ int write_tree(Symbol *s, f_stat *fp) {
 
 /* Write out the 'magic number' in the first 4 bytes so we can identify the *
  * compressed file has having been written by this program.                 */
-int write_header(f_stat *fp) {
+int _write_header(f_stat *fp) {
 	assert(fp != NULL);
 	const char buf[] = "HUFF";
 	if (fwrite_stat(buf,4,sizeof(char),fp) <= 0)
@@ -515,7 +515,7 @@ int write_header(f_stat *fp) {
 
 /* Check that this is file has the correct 'magic number' in the header	*
  * so that we identify it as a file compressed by the huffman encoder   */
-int check_header(FILE *fp)
+int _check_header(FILE *fp)
 {
 	assert(fp != NULL);
 
@@ -540,38 +540,38 @@ int check_header(FILE *fp)
 }
 
 /* Free memory in a symbol tree */
-void free_tree(Symbol *t)
+void _free_tree(Symbol *t)
 {
 	assert(t != NULL);
 
 	if (t->left != NULL) {
-		free_tree(t->left);
+		_free_tree(t->left);
 	}
 	if (t->right != NULL) {
-		free_tree(t->right);
+		_free_tree(t->right);
 	}
 
 	free(t);
 }
 
 /* Free Node structure memory */
-void free_node(Node *n)
+void _free_node(Node *n)
 {
 	assert(n != NULL);
 
 	if (n->left != NULL)
 	{
-		free_node(n->left);
+		_free_node(n->left);
 	}
 	if (n->right != NULL)
 	{
-		free_node(n->right);
+		_free_node(n->right);
 	}
 	free(n);
 }
 
 /* Given the huffman tree, decompress the file to the output */
-void output_message(Node *n, FILE *input, FILE *output)
+void _output_message(Node *n, FILE *input, FILE *output)
 {
 	/* Define assumptions with assert */
 	assert(n != NULL);
@@ -590,7 +590,7 @@ void output_message(Node *n, FILE *input, FILE *output)
 	while (fread(&last,1,1,input))
 	{
 		b.len = 0;
-		n = output_byte(&b,n,top,CHAR_BIT*sizeof(b.buf),output);
+		n = _output_byte(&b,n,top,CHAR_BIT*sizeof(b.buf),output);
 		b.buf = next;
 		next  = last;
 	}
@@ -608,20 +608,20 @@ void output_message(Node *n, FILE *input, FILE *output)
  	 * a char.							   */
 	assert(stop <= CHAR_BIT);
 
-	n = output_byte(&b,n,top,stop,output);
+	n = _output_byte(&b,n,top,stop,output);
 
 	/* make sure n is back at the top of the tree */
 	n = top;
 }
 
 /* Output byte in buffer */
-Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output)
+Node  *_output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output)
 {
         bool bit;
 
         while (b->len < stop)
 	{
-                bit = get_bit(b);
+                bit = _get_bit(b);
 		if (n->right == NULL && n->left == NULL)
 		{
 			fwrite(&n->value,1,sizeof(n->value),output);
@@ -644,7 +644,7 @@ Node  *output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output)
 }
 
 /* Return entire character from file, starting at current buffer location*/
-uint8_t get_val(Buffer *b, FILE *fp)
+uint8_t _get_val(Buffer *b, FILE *fp)
 {
 	assert(b != NULL);
 	assert(fp != NULL);
@@ -661,13 +661,13 @@ uint8_t get_val(Buffer *b, FILE *fp)
 	return c;
 }
 
-Node *get_node(Buffer *b, FILE *fp)
+Node *_get_node(Buffer *b, FILE *fp)
 {
 	/* Assume no input in NULL */
 	assert(b != NULL);
 	assert(fp != NULL);
 
-	bool bit = get_bit(b);
+	bool bit = _get_bit(b);
 
 	/* If we've not reached the end of the byte, iterate the length *
  	 * counter, else get the next byte from the file		*/
@@ -691,14 +691,14 @@ Node *get_node(Buffer *b, FILE *fp)
 
 	if (bit == true)
 	{
-		n->value = get_val(b,fp);
+		n->value = _get_val(b,fp);
 		n->left  = NULL;
 		n->right = NULL;
 	}
 	else
 	{
-		Node *left  = get_node(b,fp);
-		Node *right = get_node(b,fp);
+		Node *left  = _get_node(b,fp);
+		Node *right = _get_node(b,fp);
 		if ( left == NULL || right == NULL) {
 			/* Error has occurred */
 			return NULL;
@@ -722,12 +722,12 @@ Node *get_tree(FILE *fp)
 	/* read in the first byte */
 	fread(&b.buf,1,1,fp);
 	/* get the node tree */
-	return get_node(&b,fp);
+	return _get_node(&b,fp);
 }
 
 
 /* Return the root node in a Symbol tree */
-Symbol *get_root(Symbol *t) {
+Symbol *_get_root(Symbol *t) {
 	assert(t != NULL);
 
 	Symbol *tree;
@@ -758,27 +758,27 @@ int huffman(f_stat *in, f_stat *out)
 	}
 
 	/* Collect statistics for the 8bit characters in the file */
-	tree = build_statistics(in);
+	tree = _build_statistics(in);
 	if (tree == NULL)
 	{
 		rc = HUFF_FAILURE;
 		return rc;
 	}
-	leaves = build_tree(tree);
+	leaves = _build_tree(tree);
 	if (leaves == NULL)
 	{
 		/* Free the tree */
-		free_tree(tree);
+		_free_tree(tree);
 		/* Return failure*/
 		rc = HUFF_FAILURE;
 		return rc;
 	}
 
-	codes = get_codes(leaves);
+	codes = _get_codes(leaves);
 	if (codes == NULL)
 	{
 		/* Free tree */
-		free_tree(tree);
+		_free_tree(tree);
 		/* Free leaves */
 		free(leaves);
 		/* Return failure */
@@ -791,28 +791,28 @@ int huffman(f_stat *in, f_stat *out)
 #endif /* DEBUG */
 
 	/* Assure that we're is pointing at the top of the tree */
-	tree = get_root(tree);
+	tree = _get_root(tree);
 
-	ecode = write_header(out);
+	ecode = _write_header(out);
 	if (ecode != 0)
 	{
 		rc = HUFF_FAILURE;
 	}
 
-	ecode = write_tree(tree,out);
+	ecode = _write_tree(tree,out);
 	if (ecode != 0)
 	{
 		rc = HUFF_FAILURE;
 	}
 	
-	if (compress_file(codes,in,out) != HUFF_SUCCESS)
+	if (_compress_file(codes,in,out) != HUFF_SUCCESS)
 	{
 		rc = HUFF_FAILURE;
 	}
 
 	/* Start freeing allocated memory */
-	tree = get_root(tree);
-	free_tree(tree);
+	tree = _get_root(tree);
+	_free_tree(tree);
 	free(leaves);
 
 	while(codes != NULL)
@@ -846,7 +846,7 @@ HUFF_ERR unhuffman(f_stat *in, f_stat *out)
 	}
 
 	/* Validate that the input file was encoded by this huffman encoder */
-	if (check_header(in->file) != 0)
+	if (_check_header(in->file) != 0)
 	{
 		fprintf(stderr,"File not encoded by huffman\n");
 		return HUFF_FAILURE;
@@ -854,10 +854,10 @@ HUFF_ERR unhuffman(f_stat *in, f_stat *out)
 
 	n = get_tree(in->file);
 
-	output_message(n,in->file,out->file);
+	_output_message(n,in->file,out->file);
 
 	/* Free node tree */
-	free_node(n);
+	_free_node(n);
 
 	return HUFF_SUCCESS;
 }
