@@ -4,6 +4,7 @@
  */
 
 #include "huffman.h"
+#include "huffman_util.h"
 #include "huffman_errno.h"
 
 #include <string.h>
@@ -45,23 +46,6 @@ typedef struct {
 
 Node  *_output_byte(Buffer *b, Node *n, Node *top, int stop, FILE *output);
 void _free_tree(Symbol *t);
-
-/* Prints the symbol and its code as stored in the symbol linked list */
-void print_ll(Symbol *s)
-{
-	assert(s != NULL);
-
-	Symbol *p = s;
-
-	while (p != NULL)
-	{
-		printf("%c(%#x) %ld",p->symbol,p->symbol,p->weight);
-		if (p->left != NULL) printf("\tl: %d",p->left->code);
-		if (p->right != NULL) printf("\tr: %d",p->right->code);
-		printf("\n");
-		p=p->next;
-	}
-}
 
 /* Comparison function to be used by the C library qsort(...) function */
 int _symbol_cmp (const void *s1, const void *s2)
@@ -238,28 +222,6 @@ Symbol** _build_tree(Symbol *s)
 
 	/* Return an array of pointers to leaf nodes */
 	return leaves;
-}
-
-/* Used in debugging to print symbols with their bit codes */
-void print_codes_from_tree(Symbol **leaves)
-{
-	assert(leaves != NULL);
-
-	int n = 0;
-	Symbol *s;
-	while (leaves[n] != NULL)
-	{
-		s = leaves[n];
-		assert(s != NULL);
-		printf("%#x|%ld|\t",s->symbol,s->weight);
-		do 
-		{
-			printf("%d ",s->code);
-			s=s->parent;
-		} while (s->parent != NULL);
-		printf("\n");
-		n++;
-	}
 }
 
 /* Based on the leaves in the huffman encoding tree, return a linked list *
