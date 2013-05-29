@@ -9,6 +9,8 @@ typedef enum {
 	HUFF_FAILURE 	= -1, 	/* Failure */
 	HUFF_NOMEM   	= 1, 	/* Out of memory */
 	HUFF_INVALIDARG = 2, 	/* Invalid function argument */
+	HUFF_INVALIDHEADER=3, 	/* Invalid file header for huffman */
+	HUFF_WRITEFAIL  =4, 	/* Failed to write */
 } HUFF_ERR;
 
 #endif /* __HUFFMAN_ERRNO_H__ */
