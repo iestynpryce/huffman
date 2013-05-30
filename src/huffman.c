@@ -58,9 +58,8 @@ int _symbol_cmp (const void *s1, const void *s2)
 	return _s1->weight - _s2->weight;
 }
 
-/* Sort the linked list by swapping the values
- * Uses the stdlib qsort algorithm
- */
+/* Sort the linked list by swapping the values  *
+ * Uses the stdlib qsort algorithm. 		*/
 HUFF_ERR _sort_symbol_list(Symbol **start, Symbol* s)
 {
 	int i;
@@ -152,6 +151,9 @@ HUFF_ERR _build_statistics(Symbol **root, f_stat *fp)
 	return _sort_symbol_list(root,start);
 }
 
+/* Build a huffman code tree from a linked list of Symbols found in the *
+ * input. Returns an array of the leaves of the tree by reference in 	*
+ * through the 'leaves' parameter. 					*/
 HUFF_ERR _build_tree(Symbol ***leaves, Symbol *s)
 {
 	assert (s != NULL);
@@ -231,8 +233,8 @@ HUFF_ERR _build_tree(Symbol ***leaves, Symbol *s)
 }
 
 /* Based on the leaves in the huffman encoding tree, return a linked list *
- * of codes, comprising of the symbol and the binary huffman encoding of  *
- * the symbol                                                             */
+ * of codes by reference in the 'codes' parameter, comprising of the 	  *
+ * symbol and the binary huffman encoding of the symbol.                  */
 HUFF_ERR _get_codes(Code **codes, Symbol **leaves)
 {
 	assert(leaves != NULL);
@@ -297,6 +299,8 @@ HUFF_ERR _get_codes(Code **codes, Symbol **leaves)
 	return HUFF_SUCCESS;
 }
 
+/* Returns by reference in the parameter 'code' the huffman code for 	*
+ * the character 'c' from the 'code_book' linked list of huffman codes. */
 HUFF_ERR _get_char_code(Code **code, unsigned char c, Code *code_book)
 {
 	assert(code_book != NULL);
@@ -325,9 +329,9 @@ bool _get_bit(Buffer *b)
 }
 
 
-/* Read the file in again, using the codebook generated to output the compressed
- * symbols
- */
+/* Read the file in again, using the codebook generated to output the compressed*
+ * symbols 									*
+ * Output passed by reference in parameter 'codes'. 				*/
 HUFF_ERR _compress_file(Code *codes, f_stat *in_fp, f_stat *out_fp) 
 {
 	assert(codes != NULL);
@@ -500,7 +504,9 @@ HUFF_ERR _write_header(f_stat *fp) {
 }
 
 /* Check that this is file has the correct 'magic number' in the header	*
- * so that we identify it as a file compressed by the huffman encoder   */
+ * so that we identify it as a file compressed by the huffman encoder.  *
+ * Returns HUFF_SUCCESS if the header exists, and HUFF_INVALIDHEADER if *
+ * the header is missing. 						*/
 HUFF_ERR _check_header(FILE *fp)
 {
 	assert(fp != NULL);
