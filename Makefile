@@ -2,6 +2,7 @@
 CC=gcc
 CFLAGS=-g -Wall -Werror --std=c99 -O3 -D_POSIX_C_SOURCE=200112L
 DEBUG=-DDEBUG
+PROFILE=-pg
 LDFLAGS=-I lib/
 
 all: cli
@@ -22,6 +23,11 @@ debug:  src/huffman.c lib/huffman.h file_stat.o
 	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) src/huffman-cli.c src/huffman.c file_stat.o -o huffman
 	$(CC) $(CFLAGS) $(DEBUG) $(LDFLAGS) -DUNHUFFMAN src/huffman-cli.c src/huffman.c file_stat.o -o unhuffman
 
+# Gprof profiling build
+gprof: src/huffman-cli.c lib/huffman.h lib/file_stat.h
+	$(CC) $(CFLAGS) $(PROFILE) $(LDFLAGS) src/huffman-cli.c src/huffman.c src/file_stat.c -o huffman
+	$(CC) $(CFLAGS) $(PROFILE) $(LDFLAGS) -DUNHUFFMAN src/huffman-cli.c src/huffman.c src/file_stat.c -o unhuffman
+
 # Build the unit tests
 unittest: tests/src/test_file_stat.c tests/src/test_huffman.c tests/src/minunit.h file_stat.o huffman.o 
 	$(CC) $(CDFLAGS) $(DEBUG) $(LDFLAGS) tests/src/test_file_stat.c file_stat.o -o tests/c_test_file_stat
@@ -38,4 +44,4 @@ bd: tools/bd.c
 	$(CC) $(CFLAGS) $(LDFLAGS) tools/bd.c -o bd
 
 clean:
-	rm -rf huffman unhuffman bd *.o tests/c_test*
+	rm -rf huffman unhuffman bd *.o tests/c_test* gmon.out
