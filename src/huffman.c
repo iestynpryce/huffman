@@ -711,15 +711,20 @@ HUFF_ERR _get_node(Node **n, Buffer *b, FILE *fp)
 		rc  = _get_node(&left,b,fp);
 		if (rc != HUFF_SUCCESS)
 		{
+			free(left);
 			return rc;
 		}
 		rc  = _get_node(&right,b,fp);
 		if (rc != HUFF_SUCCESS)
 		{
+			free(left);
+			free(right);
 			return rc;
 		}
 		if ( left == NULL || right == NULL) {
 			/* Error has occurred */
+			free(left);
+			free(right);
 			return HUFF_FAILURE;
 		}
 
@@ -786,6 +791,7 @@ HUFF_ERR huffman(f_stat *in, f_stat *out)
 	{
 		/* Free the tree */
 		_free_tree(tree);
+		free(leaves);
 		return rc;
 	}
 
